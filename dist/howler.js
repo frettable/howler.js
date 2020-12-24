@@ -1037,7 +1037,7 @@
               if (!sound._node.bufferSource) {
                 continue;
               }
-
+              sound._pitchShifter.disconnect();
               if (typeof sound._node.bufferSource.stop === 'undefined') {
                 sound._node.bufferSource.noteOff(0);
               } else {
@@ -1105,6 +1105,9 @@
           if (sound._node) {
             if (self._webAudio) {
               // Make sure the sound's AudioBufferSourceNode has been created.
+              sound._pitchShifter.disconnect()
+              sound._pitchShifter.percentagePlayed = sound._seek/sound._pitchShifter.duration;
+
               if (sound._node.bufferSource) {
                 if (typeof sound._node.bufferSource.stop === 'undefined') {
                   sound._node.bufferSource.noteOff(0);
@@ -1539,7 +1542,8 @@
 
             // Change the playback rate.
             if (self._webAudio && sound._node && sound._node.bufferSource) {
-              sound._node.bufferSource.playbackRate.setValueAtTime(rate, Howler.ctx.currentTime);
+              sound._node.bufferSource.playbackRate.setValueAtTime(1, Howler.ctx.currentTime);
+               sound._pitchShifter.tempo = rate;
             } else if (sound._node) {
               sound._node.playbackRate = rate;
             }
@@ -2124,10 +2128,13 @@
       sound._node.bufferSource.buffer = cache[self._src];
 
       // Connect to the correct node.
+      sound._pitchShifter.percentagePlayed = sound._seek/sound._pitchShifter.duration;
+    sound._node.bufferSource.connect(sound._pitchShifter.node);
+
       if (sound._panner) {
-        sound._node.bufferSource.connect(sound._panner);
+        sound._pitchShifter.connect(sound._panner);
       } else {
-        sound._node.bufferSource.connect(sound._node);
+        sound._pitchShifter.connect(sound._node);
       }
 
       // Setup looping and playback rate.
@@ -2136,8 +2143,8 @@
         sound._node.bufferSource.loopStart = sound._start || 0;
         sound._node.bufferSource.loopEnd = sound._stop || 0;
       }
-      sound._node.bufferSource.playbackRate.setValueAtTime(sound._rate, Howler.ctx.currentTime);
-
+      sound._node.bufferSource.playbackRate.setValueAtTime(1, Howler.ctx.currentTime);
+       sound._pitchShifter.tempo = sound._rate
       return self;
     },
 
@@ -2231,6 +2238,7 @@
         self._node.gain.setValueAtTime(volume, Howler.ctx.currentTime);
         self._node.paused = true;
         self._node.connect(Howler.masterGain);
+        self._pitchShifter = null;
       } else if (!Howler.noAudio) {
         // Get an unlocked Audio object from the pool.
         self._node = Howler._obtainHtml5Audio();
@@ -2447,6 +2455,10 @@
     var success = function(buffer) {
       if (buffer && self._sounds.length > 0) {
         cache[self._src] = buffer;
+        self._sounds.forEach(function(sound) {
+            sound._pitchShifter = new PitchShifter(Howler.ctx, buffer);
+            sound._pitchShifter.tempo = self._rate;
+        });
         loadSound(self, buffer);
       } else {
         error();
