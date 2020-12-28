@@ -1543,7 +1543,7 @@
             // Change the playback rate.
             if (self._webAudio && sound._node && sound._node.bufferSource) {
               sound._node.bufferSource.playbackRate.setValueAtTime(1, Howler.ctx.currentTime);
-               sound._pitchShifter.tempo = rate;
+              sound._pitchShifter.tempo = rate;
             } else if (sound._node) {
               sound._node.playbackRate = rate;
             }
@@ -2456,8 +2456,8 @@
       if (buffer && self._sounds.length > 0) {
         cache[self._src] = buffer;
         self._sounds.forEach(function(sound) {
-            sound._pitchShifter = new PitchShifter(Howler.ctx, buffer);
-            sound._pitchShifter.tempo = self._rate;
+          sound._pitchShifter = new PitchShifter(Howler.ctx, buffer, 4096);
+          sound._pitchShifter.tempo = self._rate;
         });
         loadSound(self, buffer);
       } else {
