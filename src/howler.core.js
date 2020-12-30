@@ -1106,7 +1106,7 @@
             if (self._webAudio) {
               // Make sure the sound's AudioBufferSourceNode has been created.
               sound._pitchShifter.disconnect()
-              sound._pitchShifter.percentagePlayed = sound._seek/sound._pitchShifter.duration;
+              sound._pitchShifter.currentTime = sound._seek;
 
               if (sound._node.bufferSource) {
                 if (typeof sound._node.bufferSource.stop === 'undefined') {
@@ -2128,7 +2128,7 @@
       sound._node.bufferSource.buffer = cache[self._src];
 
       // Connect to the correct node.
-      sound._pitchShifter.percentagePlayed = sound._seek/sound._pitchShifter.duration;
+      sound._pitchShifter.currentTime = sound._seek;
     sound._node.bufferSource.connect(sound._pitchShifter.node);
 
       if (sound._panner) {
